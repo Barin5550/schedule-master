@@ -1,7 +1,7 @@
 "use client";
 
 import { useDraggable } from "@dnd-kit/core";
-import { Repeat } from "lucide-react";
+import { Repeat, Trash2 } from "lucide-react";
 import type { Task } from "@/types";
 import { getCategory } from "@/lib/mock";
 import { cn } from "@/lib/utils";
@@ -12,6 +12,7 @@ interface TaskBlockProps {
   trackHeight: number;
   onClick: (task: Task) => void;
   onResize: (task: Task, deltaY: number, committed: boolean) => void;
+  onDelete?: (id: string) => void;
   /** Активный сдвиг по Y во время перетаскивания. */
   liveOffsetY?: number;
 }
@@ -21,6 +22,7 @@ export default function TaskBlock({
   trackHeight,
   onClick,
   onResize,
+  onDelete,
   liveOffsetY = 0,
 }: TaskBlockProps) {
   const category = getCategory(task.categoryId);
@@ -60,7 +62,7 @@ export default function TaskBlock({
     <div
       ref={setNodeRef}
       className={cn(
-        "absolute left-1 right-1 z-10 select-none overflow-hidden rounded-lg border-l-4 px-2 py-1 transition-shadow",
+        "group/block absolute left-1 right-1 z-10 select-none overflow-hidden rounded-lg border-l-4 px-2 py-1 transition-shadow",
         isDragging ? "z-30 cursor-grabbing shadow-yellow-glow" : "cursor-grab",
       )}
       style={{
@@ -85,6 +87,17 @@ export default function TaskBlock({
         </p>
         {task.isRecurring && (
           <Repeat className="mt-0.5 h-3 w-3 shrink-0 text-brand-muted" />
+        )}
+        {onDelete && (
+          <button
+            type="button"
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => { e.stopPropagation(); onDelete(task.id); }}
+            aria-label="Удалить задачу"
+            className="ml-0.5 hidden h-4 w-4 items-center justify-center rounded text-brand-muted hover:text-red-400 group-hover/block:flex"
+          >
+            <Trash2 className="h-3 w-3" />
+          </button>
         )}
       </div>
       {height > 34 && (

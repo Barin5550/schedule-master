@@ -11,6 +11,7 @@ import TimelineItem from "./TimelineItem";
 export interface TodayTimelineProps {
   tasks: Task[];
   onToggle: (id: string) => void;
+  onDelete?: (id: string) => void;
   onAdd?: () => void;
 }
 
@@ -18,6 +19,7 @@ export interface TodayTimelineProps {
 export default function TodayTimeline({
   tasks,
   onToggle,
+  onDelete,
   onAdd,
 }: TodayTimelineProps) {
   const [nowLabel, setNowLabel] = useState<string>("");
@@ -87,7 +89,7 @@ export default function TodayTimeline({
           {tasks.map((task, i) => (
             <div key={task.id} className="flex flex-col gap-2">
               {i === nowIndex && NowLine}
-              <TimelineItem task={task} index={i} onToggle={onToggle} />
+              <TimelineItem task={task} index={i} onToggle={onToggle} onDelete={onDelete} />
             </div>
           ))}
           {nowIndex >= tasks.length && NowLine}

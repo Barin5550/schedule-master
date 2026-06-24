@@ -8,7 +8,6 @@ export const mockCategories: Category[] = [
   { id: "rest", name: "Отдых", color: "#64748B", icon: "coffee" },
 ];
 
-/** Локальная ISO-дата YYYY-MM-DD без сдвига по часовому поясу. */
 export function toLocalISO(d: Date): string {
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, "0");
@@ -24,114 +23,6 @@ export function getCategory(id?: string | null): Category | undefined {
   return mockCategories.find((c) => c.id === id);
 }
 
-/** Задачи на сегодня (mock). Дата подставляется текущая. */
-export function getMockTodayTasks(): Task[] {
-  const date = todayISO();
-  return [
-    {
-      id: "t1",
-      title: "Глубокая работа: проект ScheduleMaster",
-      date,
-      startTime: "09:00",
-      endTime: "10:30",
-      categoryId: "work",
-      priority: "high",
-      isCompleted: true,
-      isRecurring: false,
-    },
-    {
-      id: "t2",
-      title: "Английский язык",
-      date,
-      startTime: "11:00",
-      endTime: "12:00",
-      categoryId: "study",
-      priority: "medium",
-      isCompleted: true,
-      isRecurring: true,
-      recurrencePattern: "weekdays",
-    },
-    {
-      id: "t3",
-      title: "Обед и прогулка",
-      date,
-      startTime: "13:00",
-      endTime: "14:00",
-      categoryId: "rest",
-      priority: "low",
-      isCompleted: false,
-      isRecurring: false,
-    },
-    {
-      id: "t4",
-      title: "Созвон с командой",
-      date,
-      startTime: "15:00",
-      endTime: "15:45",
-      categoryId: "work",
-      priority: "high",
-      isCompleted: false,
-      isRecurring: true,
-      recurrencePattern: "weekly",
-    },
-    {
-      id: "t5",
-      title: "Тренировка",
-      date,
-      startTime: "18:00",
-      endTime: "19:00",
-      categoryId: "sport",
-      priority: "medium",
-      isCompleted: false,
-      isRecurring: true,
-      recurrencePattern: "daily",
-    },
-    {
-      id: "t6",
-      title: "Чтение книги",
-      date,
-      startTime: "21:00",
-      endTime: "21:30",
-      categoryId: "personal",
-      priority: "low",
-      isCompleted: false,
-      isRecurring: true,
-      recurrencePattern: "daily",
-    },
-  ];
-}
-
-/** Набор задач на неделю/месяц (mock) для страницы расписания. */
-export function getMockWeekTasks(): Task[] {
-  const base = new Date();
-  const day = base.getDay();
-  const monday = new Date(base);
-  monday.setDate(base.getDate() - ((day + 6) % 7));
-
-  function dateAt(offset: number): string {
-    const d = new Date(monday);
-    d.setDate(monday.getDate() + offset);
-    return toLocalISO(d);
-  }
-
-  const seed: Array<Omit<Task, "id" | "date"> & { offset: number }> = [
-    { offset: 0, title: "Планирование недели", startTime: "09:00", endTime: "09:30", categoryId: "work", priority: "high", isCompleted: false, isRecurring: false },
-    { offset: 0, title: "Английский", startTime: "11:00", endTime: "12:00", categoryId: "study", priority: "medium", isCompleted: false, isRecurring: true, recurrencePattern: "weekdays" },
-    { offset: 1, title: "Тренировка", startTime: "07:30", endTime: "08:30", categoryId: "sport", priority: "medium", isCompleted: false, isRecurring: true, recurrencePattern: "daily" },
-    { offset: 1, title: "Спринт-ревью", startTime: "14:00", endTime: "15:00", categoryId: "work", priority: "high", isCompleted: false, isRecurring: false },
-    { offset: 2, title: "Курс по дизайну", startTime: "19:00", endTime: "20:30", categoryId: "study", priority: "medium", isCompleted: false, isRecurring: false },
-    { offset: 3, title: "Глубокая работа", startTime: "09:00", endTime: "11:00", categoryId: "work", priority: "high", isCompleted: false, isRecurring: false },
-    { offset: 4, title: "Тренировка", startTime: "18:00", endTime: "19:00", categoryId: "sport", priority: "medium", isCompleted: false, isRecurring: true, recurrencePattern: "daily" },
-    { offset: 5, title: "Встреча с друзьями", startTime: "16:00", endTime: "18:00", categoryId: "personal", priority: "low", isCompleted: false, isRecurring: false },
-    { offset: 6, title: "Подведение итогов", startTime: "20:00", endTime: "20:30", categoryId: "personal", priority: "medium", isCompleted: false, isRecurring: true, recurrencePattern: "weekly" },
-  ];
-
-  return seed.map((s, i) => {
-    const { offset, ...rest } = s;
-    return { ...rest, id: `w${i}`, date: dateAt(offset) } as Task;
-  });
-}
-
 export const mockHabits: Habit[] = [
   { id: "h1", name: "Чтение 20 минут", streak: 12, doneToday: true },
   { id: "h2", name: "Медитация", streak: 5, doneToday: false },
@@ -139,9 +30,7 @@ export const mockHabits: Habit[] = [
   { id: "h4", name: "10 000 шагов", streak: 21, doneToday: true },
 ];
 
-/** Процент выполнения по дням недели (Пн–Вс). */
 export const mockWeekProgress = [60, 80, 45, 90, 70, 100, 30];
-
 export const weekDayLabels = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
 
 export function getGreeting(date = new Date()): string {
@@ -164,30 +53,17 @@ export function formatRuDate(date = new Date()): string {
 
 const STORAGE_KEY = "schedulemaster_tasks";
 
-/** Детерминированный стартовый набор (сегодня + неделя), дедуп по id. */
-export function getInitialTasks(): Task[] {
-  const initial = [...getMockTodayTasks(), ...getMockWeekTasks()];
-  return Array.from(new Map(initial.map((t) => [t.id, t])).values());
-}
-
-/** Загрузить задачи из localStorage (демо-режим). */
 export function loadPersistedTasks(): Task[] {
-  if (typeof window === "undefined") return getInitialTasks();
+  if (typeof window === "undefined") return [];
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) {
-      // Первый запуск — записать стартовые данные.
-      const unique = getInitialTasks();
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(unique));
-      return unique;
-    }
+    if (!raw) return [];
     return JSON.parse(raw) as Task[];
   } catch {
-    return getInitialTasks();
+    return [];
   }
 }
 
-/** Сохранить задачи в localStorage (демо-режим). */
 export function persistTasks(tasks: Task[]): void {
   if (typeof window === "undefined") return;
   try {
@@ -197,11 +73,40 @@ export function persistTasks(tasks: Task[]): void {
   }
 }
 
+// Старые демо-id, которые могли остаться в localStorage у ранних пользователей.
+const LEGACY_TASK_IDS = [
+  "t1", "t2", "t3", "t4", "t5", "t6",
+  "w0", "w1", "w2", "w3", "w4", "w5", "w6", "w7", "w8",
+];
+
+/**
+ * Одноразовая миграция: если в хранилище остались старые mock-задачи
+ * (id вида t1.., w0..), очистить их, чтобы новый пользователь начинал с чистого
+ * листа. Возвращает true, если что-то было удалено.
+ */
+export function resetIfLegacy(): boolean {
+  if (typeof window === "undefined") return false;
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (!raw) return false;
+  try {
+    const tasks = JSON.parse(raw) as { id: string }[];
+    const hasLegacy =
+      Array.isArray(tasks) &&
+      tasks.some((t) => LEGACY_TASK_IDS.includes(t.id));
+    if (hasLegacy) {
+      localStorage.removeItem(STORAGE_KEY);
+      return true;
+    }
+  } catch {
+    // ignore
+  }
+  return false;
+}
+
 // ===== «Основа» расписания: закреплённый день как шаблон =====
 
 const BASE_KEY = "schedulemaster_base";
 
-/** Шаблон задачи без id/date — кирпичик «основы» расписания. */
 export type BaseTaskTemplate = Pick<
   Task,
   | "title"
@@ -214,7 +119,6 @@ export type BaseTaskTemplate = Pick<
   | "recurrencePattern"
 >;
 
-/** Загрузить закреплённую основу (или null, если не задана). */
 export function loadBaseSchedule(): BaseTaskTemplate[] | null {
   if (typeof window === "undefined") return null;
   try {
@@ -225,7 +129,6 @@ export function loadBaseSchedule(): BaseTaskTemplate[] | null {
   }
 }
 
-/** Закрепить набор задач как основу (id/date отбрасываются). */
 export function saveBaseSchedule(tasks: Task[]): void {
   if (typeof window === "undefined") return;
   const templates: BaseTaskTemplate[] = tasks.map((t) => ({
@@ -254,11 +157,7 @@ export function clearBaseSchedule(): void {
   }
 }
 
-/** Построить реальные задачи из основы для конкретной даты. */
-export function buildTasksFromBase(
-  base: BaseTaskTemplate[],
-  dateISO: string,
-): Task[] {
+export function buildTasksFromBase(base: BaseTaskTemplate[], dateISO: string): Task[] {
   const stamp = Date.now();
   return base.map((t, i) => ({
     id: `base-${dateISO}-${i}-${stamp}`,

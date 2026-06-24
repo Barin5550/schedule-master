@@ -102,6 +102,7 @@ export default function AddTaskModal({
           placeholder="Например: Подготовить презентацию"
           value={title}
           error={error}
+          autoFocus
           onChange={(e) => {
             setTitle(e.target.value);
             if (error) setError("");

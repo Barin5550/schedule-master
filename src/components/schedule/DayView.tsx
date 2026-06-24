@@ -21,6 +21,7 @@ interface DayViewProps {
   tasks: Task[];
   onTaskClick: (task: Task) => void;
   onTaskUpdate: (id: string, patch: Partial<Task>) => void;
+  onTaskDelete?: (id: string) => void;
   onEmptyClick: (startTime: string) => void;
 }
 
@@ -29,6 +30,7 @@ export default function DayView({
   tasks,
   onTaskClick,
   onTaskUpdate,
+  onTaskDelete,
   onEmptyClick,
 }: DayViewProps) {
   const trackRef = useRef<HTMLDivElement>(null);
@@ -150,8 +152,18 @@ export default function DayView({
                 trackHeight={TRACK_HEIGHT}
                 onClick={onTaskClick}
                 onResize={handleResize}
+                onDelete={onTaskDelete}
               />
             ))}
+
+            {/* Подсказка для пустого дня */}
+            {tasks.length === 0 && (
+              <div className="pointer-events-none absolute inset-0 flex items-start justify-center pt-24">
+                <p className="rounded-lg border border-dashed border-brand-border px-4 py-2 text-sm text-brand-muted">
+                  Нет задач — кликни на шкалу, чтобы добавить
+                </p>
+              </div>
+            )}
 
             {/* Линия текущего времени */}
             {showNowLine && (

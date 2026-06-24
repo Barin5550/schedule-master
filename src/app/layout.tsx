@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import LegacyReset from "@/components/LegacyReset";
 
 const inter = Inter({
   subsets: ["latin", "cyrillic"],
@@ -53,6 +54,7 @@ export default function RootLayout({
   return (
     <html lang="ru" className={inter.variable}>
       <body className="bg-brand-black text-brand-text antialiased">
+        <LegacyReset />
         {children}
       </body>
     </html>

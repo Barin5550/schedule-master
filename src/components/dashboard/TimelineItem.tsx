@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Check, Repeat } from "lucide-react";
+import { Check, Repeat, Trash2 } from "lucide-react";
 import Badge from "@/components/ui/Badge";
 import { getCategory } from "@/lib/mock";
 import type { Task } from "@/types";
@@ -11,6 +11,7 @@ export interface TimelineItemProps {
   task: Task;
   index: number;
   onToggle: (id: string) => void;
+  onDelete?: (id: string) => void;
 }
 
 /** Одна строка расписания с чекбоксом, цветной полосой и категорией. */
@@ -18,6 +19,7 @@ export default function TimelineItem({
   task,
   index,
   onToggle,
+  onDelete,
 }: TimelineItemProps) {
   const category = getCategory(task.categoryId);
   const barColor =
@@ -35,7 +37,7 @@ export default function TimelineItem({
       whileInView={{ opacity: 1, x: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.35, ease: "easeOut", delay: index * 0.05 }}
-      className="group relative flex items-stretch gap-3 rounded-xl border border-brand-border bg-brand-black/40 p-3 transition-colors hover:border-brand-yellow/40"
+      className="group relative flex items-stretch gap-3 rounded-xl border border-brand-border bg-brand-black/40 p-3 transition-colors hover:border-brand-yellow/40 hover:pr-10"
     >
       <span
         aria-hidden="true"
@@ -88,6 +90,18 @@ export default function TimelineItem({
           )}
         </div>
       </div>
+
+      {/* Кнопка удаления — видна при hover */}
+      {onDelete && (
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onDelete(task.id); }}
+          aria-label="Удалить задачу"
+          className="absolute right-2 top-1/2 -translate-y-1/2 hidden h-7 w-7 items-center justify-center rounded-lg text-brand-muted transition-colors hover:bg-red-500/10 hover:text-red-400 group-hover:flex"
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+        </button>
+      )}
     </motion.div>
   );
 }
