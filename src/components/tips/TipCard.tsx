@@ -1,5 +1,6 @@
 "use client";
 
+import { forwardRef } from "react";
 import { motion } from "framer-motion";
 import { Bookmark, BookmarkCheck, Clock } from "lucide-react";
 import Card from "@/components/ui/Card";
@@ -16,16 +17,15 @@ export interface TipCardProps {
   onOpen: (tip: Tip) => void;
 }
 
-export default function TipCard({
-  tip,
-  saved,
-  onToggleSave,
-  onOpen,
-}: TipCardProps) {
+const TipCard = forwardRef<HTMLDivElement, TipCardProps>(function TipCard(
+  { tip, saved, onToggleSave, onOpen },
+  ref,
+) {
   const Icon = categoryIcons[tip.category];
 
   return (
     <motion.div
+      ref={ref}
       layout
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
@@ -87,4 +87,8 @@ export default function TipCard({
       </Card>
     </motion.div>
   );
-}
+});
+
+TipCard.displayName = "TipCard";
+
+export default TipCard;
