@@ -159,3 +159,118 @@ export function formatRuDate(date = new Date()): string {
     month: "long",
   });
 }
+
+// ===== Демо-хранилище задач (localStorage) =====
+
+const STORAGE_KEY = "schedulemaster_tasks";
+
+/** Детерминированный стартовый набор (сегодня + неделя), дедуп по id. */
+export function getInitialTasks(): Task[] {
+  const initial = [...getMockTodayTasks(), ...getMockWeekTasks()];
+  return Array.from(new Map(initial.map((t) => [t.id, t])).values());
+}
+
+/** Загрузить задачи из localStorage (демо-режим). */
+export function loadPersistedTasks(): Task[] {
+  if (typeof window === "undefined") return getInitialTasks();
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) {
+      // Первый запуск — записать стартовые данные.
+      const unique = getInitialTasks();
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(unique));
+      return unique;
+    }
+    return JSON.parse(raw) as Task[];
+  } catch {
+    return getInitialTasks();
+  }
+}
+
+/** Сохранить задачи в localStorage (демо-режим). */
+export function persistTasks(tasks: Task[]): void {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+  } catch {
+    // ignore
+  }
+}
+
+// ===== «Основа» расписания: закреплённый день как шаблон =====
+
+const BASE_KEY = "schedulemaster_base";
+
+/** Шаблон задачи без id/date — кирпичик «основы» расписания. */
+export type BaseTaskTemplate = Pick<
+  Task,
+  | "title"
+  | "description"
+  | "startTime"
+  | "endTime"
+  | "categoryId"
+  | "priority"
+  | "isRecurring"
+  | "recurrencePattern"
+>;
+
+/** Загрузить закреплённую основу (или null, если не задана). */
+export function loadBaseSchedule(): BaseTaskTemplate[] | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(BASE_KEY);
+    return raw ? (JSON.parse(raw) as BaseTaskTemplate[]) : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Закрепить набор задач как основу (id/date отбрасываются). */
+export function saveBaseSchedule(tasks: Task[]): void {
+  if (typeof window === "undefined") return;
+  const templates: BaseTaskTemplate[] = tasks.map((t) => ({
+    title: t.title,
+    description: t.description ?? null,
+    startTime: t.startTime ?? null,
+    endTime: t.endTime ?? null,
+    categoryId: t.categoryId ?? null,
+    priority: t.priority,
+    isRecurring: t.isRecurring,
+    recurrencePattern: t.recurrencePattern ?? null,
+  }));
+  try {
+    localStorage.setItem(BASE_KEY, JSON.stringify(templates));
+  } catch {
+    // ignore
+  }
+}
+
+export function clearBaseSchedule(): void {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.removeItem(BASE_KEY);
+  } catch {
+    // ignore
+  }
+}
+
+/** Построить реальные задачи из основы для конкретной даты. */
+export function buildTasksFromBase(
+  base: BaseTaskTemplate[],
+  dateISO: string,
+): Task[] {
+  const stamp = Date.now();
+  return base.map((t, i) => ({
+    id: `base-${dateISO}-${i}-${stamp}`,
+    title: t.title,
+    description: t.description ?? null,
+    date: dateISO,
+    startTime: t.startTime ?? null,
+    endTime: t.endTime ?? null,
+    categoryId: t.categoryId ?? null,
+    priority: t.priority,
+    isCompleted: false,
+    isRecurring: t.isRecurring,
+    recurrencePattern: t.recurrencePattern ?? null,
+  }));
+}

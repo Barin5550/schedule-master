@@ -6,11 +6,12 @@ import Button from "@/components/ui/Button";
 import ProgressBar from "@/components/ui/ProgressBar";
 import { useAuth } from "@/hooks/useAuth";
 import { useCountUp } from "@/hooks/useCountUp";
+import { useTasks } from "@/hooks/useTasks";
 import {
   formatRuDate,
   getGreeting,
-  getMockTodayTasks,
   mockWeekProgress,
+  todayISO,
 } from "@/lib/mock";
 import type { Task } from "@/types";
 import StatCard from "@/components/dashboard/StatCard";
@@ -28,7 +29,7 @@ export default function DashboardPage() {
   const name =
     (user?.user_metadata?.first_name as string | undefined) ?? "Чемпион";
 
-  const [tasks, setTasks] = useState<Task[]>(() => getMockTodayTasks());
+  const { tasks, mutate } = useTasks({ date: todayISO() });
   const [modalOpen, setModalOpen] = useState(false);
 
   const total = tasks.length;
@@ -47,16 +48,16 @@ export default function DashboardPage() {
   const greeting = useMemo(() => getGreeting(), []);
   const dateLabel = useMemo(() => formatRuDate(), []);
 
-  function toggleTask(id: string) {
-    setTasks((prev) =>
+  async function toggleTask(id: string) {
+    await mutate((prev) =>
       prev.map((t) =>
         t.id === id ? { ...t, isCompleted: !t.isCompleted } : t,
       ),
     );
   }
 
-  function addTask(task: Task) {
-    setTasks((prev) => [task, ...prev]);
+  async function addTask(task: Task) {
+    await mutate((prev) => [task, ...prev]);
   }
 
   return (
@@ -123,7 +124,11 @@ export default function DashboardPage() {
       {/* Две колонки */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
         <div className="lg:col-span-3">
-          <TodayTimeline tasks={tasks} onToggle={toggleTask} />
+          <TodayTimeline
+            tasks={tasks}
+            onToggle={toggleTask}
+            onAdd={() => setModalOpen(true)}
+          />
         </div>
         <div className="flex flex-col gap-6 lg:col-span-2">
           <TipOfDayCard />

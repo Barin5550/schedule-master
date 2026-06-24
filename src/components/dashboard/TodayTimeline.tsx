@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Card from "@/components/ui/Card";
+import Button from "@/components/ui/Button";
 import EmptyState from "@/components/ui/EmptyState";
 import { CalendarClock } from "lucide-react";
 import type { Task } from "@/types";
@@ -10,10 +11,15 @@ import TimelineItem from "./TimelineItem";
 export interface TodayTimelineProps {
   tasks: Task[];
   onToggle: (id: string) => void;
+  onAdd?: () => void;
 }
 
 /** Расписание на сегодня с индикатором текущего времени. */
-export default function TodayTimeline({ tasks, onToggle }: TodayTimelineProps) {
+export default function TodayTimeline({
+  tasks,
+  onToggle,
+  onAdd,
+}: TodayTimelineProps) {
   const [nowLabel, setNowLabel] = useState<string>("");
   // Индекс позиции, перед которой вставить линию текущего времени.
   const [nowIndex, setNowIndex] = useState<number>(-1);
@@ -65,9 +71,16 @@ export default function TodayTimeline({ tasks, onToggle }: TodayTimelineProps) {
 
       {tasks.length === 0 ? (
         <EmptyState
-          title="Задач пока нет"
+          title="На сегодня задач нет"
           description="Добавьте первую задачу, чтобы спланировать день."
           icon={<CalendarClock className="h-8 w-8 text-brand-yellow" />}
+          action={
+            onAdd && (
+              <Button variant="outline" size="sm" onClick={onAdd}>
+                Добавить первую задачу
+              </Button>
+            )
+          }
         />
       ) : (
         <div className="flex flex-col gap-2">

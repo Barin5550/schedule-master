@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import Sidebar from "@/components/layout/Sidebar";
 import { Logo } from "@/components/layout/Header";
+import DemoBanner from "@/components/ui/DemoBanner";
 
 /**
  * Каркас приложения: фиксированный Sidebar на десктопе и выезжающий
@@ -73,6 +74,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
       {/* Main content */}
       <main className="lg:pl-64">
+        <DemoBanner />
         <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
           {children}
         </div>

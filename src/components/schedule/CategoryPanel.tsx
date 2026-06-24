@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Check, Pencil, X } from "lucide-react";
+import { Check, Pencil, Pin, X } from "lucide-react";
 import type { Category } from "@/types";
 import Button from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
@@ -17,6 +17,14 @@ interface CategoryPanelProps {
   activeFilter: string | null;
   onFilter: (id: string | null) => void;
   onApplyTemplate: (key: TemplateKey) => void;
+  /** Есть ли закреплённая основа. */
+  hasBase: boolean;
+  /** Сколько задач в основе. */
+  baseCount: number;
+  /** Закрепить текущий день как основу. */
+  onPinBase: () => void;
+  /** Применить основу к выбранному дню. */
+  onApplyBase: () => void;
 }
 
 const templates: { key: TemplateKey; label: string; desc: string }[] = [
@@ -33,9 +41,20 @@ export default function CategoryPanel({
   activeFilter,
   onFilter,
   onApplyTemplate,
+  hasBase,
+  baseCount,
+  onPinBase,
+  onApplyBase,
 }: CategoryPanelProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draftName, setDraftName] = useState("");
+  const [pinned, setPinned] = useState(false);
+
+  function handlePin() {
+    onPinBase();
+    setPinned(true);
+    window.setTimeout(() => setPinned(false), 2000);
+  }
 
   function startEdit(cat: Category) {
     setEditingId(cat.id);
@@ -185,6 +204,44 @@ export default function CategoryPanel({
                 <p className="mt-3 text-[11px] leading-snug text-brand-muted">
                   Шаблон заменит задачи выбранного дня готовым набором.
                 </p>
+              </div>
+
+              {/* Моя основа — закреплённый день как шаблон */}
+              <div>
+                <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-brand-muted">
+                  Моя основа
+                </h3>
+                <div className="space-y-2">
+                  <button
+                    type="button"
+                    onClick={handlePin}
+                    className="w-full rounded-lg border border-brand-border px-3 py-2 text-left transition-colors hover:border-brand-yellow hover:bg-white/5"
+                  >
+                    <p className="flex items-center gap-1.5 text-sm font-medium text-brand-text">
+                      <Pin className="h-3.5 w-3.5 text-brand-yellow" />
+                      {pinned ? "Основа сохранена!" : "Закрепить текущий день"}
+                    </p>
+                    <p className="text-xs text-brand-muted">
+                      Сохранить задачи дня как основу-шаблон
+                    </p>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={onApplyBase}
+                    disabled={!hasBase}
+                    className="w-full rounded-lg border border-brand-border px-3 py-2 text-left transition-colors hover:border-brand-yellow hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-brand-border"
+                  >
+                    <p className="text-sm font-medium text-brand-text">
+                      Применить основу
+                      {hasBase ? ` · ${baseCount}` : ""}
+                    </p>
+                    <p className="text-xs text-brand-muted">
+                      {hasBase
+                        ? "Заполнить выбранный день вашей основой"
+                        : "Сначала закрепите день"}
+                    </p>
+                  </button>
+                </div>
               </div>
             </div>
 

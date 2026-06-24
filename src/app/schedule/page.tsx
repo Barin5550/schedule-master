@@ -1,9 +1,15 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, PanelRight, Plus } from "lucide-react";
 import type { Category, Task } from "@/types";
-import { getMockWeekTasks, mockCategories } from "@/lib/mock";
+import {
+  buildTasksFromBase,
+  loadBaseSchedule,
+  mockCategories,
+  saveBaseSchedule,
+} from "@/lib/mock";
+import { useTasks } from "@/hooks/useTasks";
 import Button from "@/components/ui/Button";
 import ViewSwitcher, {
   type ScheduleView,
@@ -30,7 +36,7 @@ import {
 export default function SchedulePage() {
   const [view, setView] = useState<ScheduleView>("day");
   const [cursor, setCursor] = useState<Date>(() => new Date());
-  const [tasks, setTasks] = useState<Task[]>(() => getMockWeekTasks());
+  const { tasks, mutate } = useTasks();
   const [categories, setCategories] = useState<Category[]>(() => [
     ...mockCategories,
   ]);
@@ -40,6 +46,12 @@ export default function SchedulePage() {
 
   const [modalOpen, setModalOpen] = useState(false);
   const [modalStart, setModalStart] = useState("09:00");
+
+  // Закреплённая «основа» расписания (количество задач; 0 — основы нет).
+  const [baseCount, setBaseCount] = useState(0);
+  useEffect(() => {
+    setBaseCount(loadBaseSchedule()?.length ?? 0);
+  }, []);
 
   // Фильтрация по категории
   const visibleTasks = useMemo(
@@ -83,12 +95,14 @@ export default function SchedulePage() {
     return formatMonthLabel(cursor);
   }, [view, cursor]);
 
-  // ===== Операции с задачами =====
-  function updateTask(id: string, patch: Partial<Task>) {
-    setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, ...patch } : t)));
+  // ===== Операции с задачами (через общее хранилище) =====
+  async function updateTask(id: string, patch: Partial<Task>) {
+    await mutate((prev) =>
+      prev.map((t) => (t.id === id ? { ...t, ...patch } : t)),
+    );
   }
 
-  function addTask(draft: ScheduleTaskDraft) {
+  async function addTask(draft: ScheduleTaskDraft) {
     const task: Task = {
       id: `t-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
       title: draft.title,
@@ -102,7 +116,7 @@ export default function SchedulePage() {
       isRecurring: draft.isRecurring,
       recurrencePattern: draft.recurrencePattern,
     };
-    setTasks((prev) => [...prev, task]);
+    await mutate((prev) => [...prev, task]);
     setModalOpen(false);
   }
 
@@ -118,14 +132,36 @@ export default function SchedulePage() {
     );
   }
 
-  function applyTemplate(key: TemplateKey) {
+  async function applyTemplate(key: TemplateKey) {
     const targetISO =
       view === "month" && monthSelected
         ? toISODate(monthSelected)
         : dayISO;
     const fresh = buildTemplateTasks(key, targetISO);
-    setTasks((prev) => [
+    await mutate((prev) => [
       ...prev.filter((t) => t.date !== targetISO),
+      ...fresh,
+    ]);
+    setFilter(null);
+    setPanelOpen(false);
+  }
+
+  // ===== Основа расписания =====
+  const baseTargetISO =
+    view === "month" && monthSelected ? toISODate(monthSelected) : dayISO;
+
+  function pinAsBase() {
+    const dayList = tasks.filter((t) => t.date === baseTargetISO);
+    saveBaseSchedule(dayList);
+    setBaseCount(dayList.length);
+  }
+
+  async function applyBase() {
+    const base = loadBaseSchedule();
+    if (!base || base.length === 0) return;
+    const fresh = buildTasksFromBase(base, baseTargetISO);
+    await mutate((prev) => [
+      ...prev.filter((t) => t.date !== baseTargetISO),
       ...fresh,
     ]);
     setFilter(null);
@@ -226,6 +262,10 @@ export default function SchedulePage() {
         activeFilter={filter}
         onFilter={setFilter}
         onApplyTemplate={applyTemplate}
+        hasBase={baseCount > 0}
+        baseCount={baseCount}
+        onPinBase={pinAsBase}
+        onApplyBase={applyBase}
       />
 
       {/* Модалка задачи */}

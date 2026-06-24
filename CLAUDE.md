@@ -81,6 +81,14 @@
 - Чтобы включить бэкенд: выполнить `supabase/schema.sql`, прописать `NEXT_PUBLIC_SUPABASE_URL` и `NEXT_PUBLIC_SUPABASE_ANON_KEY` в `.env.local`.
 - Даты форматируются локально (`toLocalISO` в `src/lib/mock.ts`, `toISODate` в `scheduleUtils`) — НЕ через `toISOString()` (сдвиг по TZ).
 
+### Общее хранилище задач (единый источник)
+
+- `useTasks()` (`src/hooks/useTasks.ts`) — ЕДИНЫЙ источник задач для дашборда и расписания. В демо-режиме все экземпляры делят один SWR-ключ `demo-tasks` → правки видны на всех страницах; данные пишутся в `localStorage` (`schedulemaster_tasks`). `mutate(updater)` принимает массив или `(prev)=>next`, сам сохраняет в localStorage.
+- НЕ возвращать к локальному `useState` для задач в dashboard/schedule — это рассинхронизирует страницы.
+- Привычки сохраняются в `localStorage` (`schedulemaster_habits`) в `HabitsCard` (гидрация после монтирования, чтобы не было SSR-mismatch).
+- **«Основа» расписания**: `loadBaseSchedule`/`saveBaseSchedule`/`buildTasksFromBase` (`src/lib/mock.ts`, ключ `schedulemaster_base`). На странице расписания в `CategoryPanel` секция «Моя основа»: «Закрепить текущий день» → сохраняет задачи дня как шаблон; «Применить основу» → заполняет выбранный день этим шаблоном.
+- Демо-режим помечен баннером `DemoBanner` (`src/components/ui/DemoBanner.tsx`), вставлен в `AppShell`.
+
 ## Правила кода
 
 - Все компоненты — функциональные, TypeScript.

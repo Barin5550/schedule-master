@@ -26,7 +26,7 @@ export default function TimelineItem({
 
   const timeRange =
     task.startTime && task.endTime
-      ? `${task.startTime}–${task.endTime}`
+      ? `${task.startTime} – ${task.endTime}`
       : task.startTime ?? "";
 
   return (

@@ -1,53 +1,82 @@
 "use client";
 
+import { useCallback } from "react";
 import useSWR from "swr";
 import { isSupabaseConfigured } from "@/lib/supabase";
 import { getTasks, type TaskRange } from "@/lib/api/tasks";
-import { getMockTodayTasks, getMockWeekTasks, todayISO } from "@/lib/mock";
+import {
+  getInitialTasks,
+  loadPersistedTasks,
+  persistTasks,
+} from "@/lib/mock";
 import type { Task } from "@/types";
 
-function mockFallback(range: TaskRange): Task[] {
-  if (range.date) {
-    if (range.date === todayISO()) return getMockTodayTasks();
-    return getMockWeekTasks().filter((t) => t.date === range.date);
-  }
+export type TasksUpdater = Task[] | ((prev: Task[]) => Task[]);
+
+function filterByRange(all: Task[], range: TaskRange): Task[] {
+  if (range.date) return all.filter((t) => t.date === range.date);
   if (range.from || range.to) {
-    return getMockWeekTasks().filter(
+    return all.filter(
       (t) =>
         (!range.from || t.date >= range.from) &&
         (!range.to || t.date <= range.to),
     );
   }
-  return getMockTodayTasks();
+  return all;
 }
 
 /**
- * Загрузка задач. Если Supabase не настроен — возвращает mock-данные
- * (демо-режим), иначе тянет реальные задачи через SWR с loading/error.
+ * Единый источник задач для дашборда и расписания.
+ *
+ * Демо-режим (Supabase не настроен): все вызовы хука делят один SWR-ключ
+ * `demo-tasks`, поэтому правки видны на всех страницах; данные сохраняются
+ * в localStorage. Реальный режим: задачи тянутся из Supabase по диапазону.
+ *
+ * `mutate` принимает новый массив или функцию-апдейтер `(prev) => next`.
  */
 export function useTasks(range: TaskRange = {}) {
-  const key = isSupabaseConfigured ? ["tasks", JSON.stringify(range)] : null;
-  const { data, error, isLoading, mutate } = useSWR<Task[]>(
+  const demo = !isSupabaseConfigured;
+  // В демо-режиме ключ общий — общее хранилище между страницами.
+  const key = demo ? "demo-tasks" : ["tasks", JSON.stringify(range)];
+
+  const {
+    data,
+    error,
+    isLoading,
+    mutate: swrMutate,
+  } = useSWR<Task[]>(
     key,
-    () => getTasks(range),
+    () => (demo ? loadPersistedTasks() : getTasks(range)),
     { revalidateOnFocus: false },
   );
 
-  if (!isSupabaseConfigured) {
-    return {
-      tasks: mockFallback(range),
-      isLoading: false,
-      error: null as Error | null,
-      mutate: async () => {},
-      isDemo: true,
-    };
-  }
+  // До завершения первого фетча отдаём детерминированный seed (без чтения
+  // localStorage при рендере) — чтобы не было рассинхрона гидрации.
+  const allTasks = data ?? (demo ? getInitialTasks() : []);
+  const tasks = demo ? filterByRange(allTasks, range) : (data ?? []);
+
+  const mutate = useCallback(
+    async (updater?: TasksUpdater) => {
+      await swrMutate(
+        (current?: Task[]) => {
+          const base = current ?? (demo ? loadPersistedTasks() : []);
+          const next =
+            typeof updater === "function" ? updater(base) : (updater ?? base);
+          if (demo) persistTasks(next);
+          return next;
+        },
+        { revalidate: false },
+      );
+    },
+    [swrMutate, demo],
+  );
 
   return {
-    tasks: data ?? [],
-    isLoading,
-    error: (error as Error) ?? null,
+    tasks,
+    allTasks,
+    isLoading: demo ? false : isLoading,
+    error: demo ? null : ((error as Error) ?? null),
     mutate,
-    isDemo: false,
+    isDemo: demo,
   };
 }
