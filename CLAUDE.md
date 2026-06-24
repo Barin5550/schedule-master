@@ -66,6 +66,20 @@
 ## Готовые модули (НЕ ТРОГАТЬ без явного запроса)
 
 - [x] **Задача 1** — Инициализация + дизайн-система: тема, `cn`, UI (Button/Card/Input/Badge), Header, globals.css, типы.
+- [x] **Задача 2** — Лендинг `src/app/page.tsx` + `src/components/landing/*` (hero, статистика, фичи, шаги, отзывы, CTA, footer).
+- [x] **Задача 3** — Авторизация: `src/lib/supabase.ts`, `src/hooks/useAuth.ts`, `src/middleware.ts`, `src/app/auth/*` (login + 2-шаговый register), `src/components/auth/*`. Демо-режим, если Supabase не настроен.
+- [x] **Задача 4** — Дашборд `src/app/dashboard/*` + `src/components/dashboard/*`; Sidebar/AppShell в `src/components/layout/*`.
+- [x] **Задача 5** — Расписание `src/app/schedule/*` + `src/components/schedule/*` (День/Неделя/Месяц, dnd-kit, шаблоны, повторы).
+- [x] **Задача 6** — Советы `src/app/tips/*` + `src/components/tips/*`; данные в `src/data/tips.ts`.
+- [x] **Задача 7** — БД: `supabase/schema.sql` (таблицы + RLS + триггер), `src/lib/api/*` (CRUD), `src/hooks/useTasks.ts` (SWR + mock-fallback).
+- [x] **Задача 8** — Профиль `src/app/profile/*` + `src/components/profile/*` (шапка, статистика, настройки-аккордеон, достижения, опасная зона).
+- [x] **Задача 9** — Полиш: `src/app/template.tsx` (переходы), `*/loading.tsx` (скелетоны), `not-found.tsx`/`error.tsx`, `opengraph-image.tsx`, SEO-метаданные, мобильный drawer.
+
+### Реестр данных/демо-режим
+
+- Без настоящего Supabase (`.env.local` с placeholder) приложение работает на mock-данных: `isSupabaseConfigured===false`, middleware пропускает все маршруты, страницы видны без логина.
+- Чтобы включить бэкенд: выполнить `supabase/schema.sql`, прописать `NEXT_PUBLIC_SUPABASE_URL` и `NEXT_PUBLIC_SUPABASE_ANON_KEY` в `.env.local`.
+- Даты форматируются локально (`toLocalISO` в `src/lib/mock.ts`, `toISODate` в `scheduleUtils`) — НЕ через `toISOString()` (сдвиг по TZ).
 
 ## Правила кода
 

@@ -1,36 +1,38 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ScheduleMaster
 
-## Getting Started
+Профессиональное веб-приложение для дисциплины и управления расписанием.
+Чёрно-жёлтая тема, плавные анимации, авторизация и библиотека советов по продуктивности.
 
-First, run the development server:
+## Стек
+
+Next.js 14 (App Router) · TypeScript · Tailwind CSS 3 · Supabase · Framer Motion · Lucide · React Hook Form + Zod · @dnd-kit · SWR
+
+## Возможности
+
+- **Лендинг** — hero, статистика, фичи, шаги, отзывы, CTA.
+- **Авторизация** — split-screen вход и 2-шаговая регистрация (валидация RHF + Zod), вход через Google.
+- **Дашборд** — приветствие, карточки статистики со счётчиками, таймлайн дня, совет дня, прогресс недели, привычки, модалка добавления задачи.
+- **Расписание** — режимы День / Неделя / Месяц, drag & drop (день), категории, шаблоны, повторяющиеся задачи.
+- **Советы** — поиск, фильтры, избранный совет, сетка карточек, техники, личная коллекция.
+- **Профиль** — редактирование, статистика, настройки (аккордеон), достижения, опасная зона.
+
+## Запуск
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev      # http://localhost:3000
+npm run build    # продакшен-сборка
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Приложение работает «из коробки» в **демо-режиме** на mock-данных — без настройки бэкенда видны все страницы.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Подключение Supabase (опционально)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. Создай проект на [supabase.com](https://supabase.com).
+2. Выполни SQL из [`supabase/schema.sql`](supabase/schema.sql) в SQL Editor (таблицы, RLS, триггер профиля).
+3. Скопируй `.env.local.example` → `.env.local` и подставь `NEXT_PUBLIC_SUPABASE_URL` и `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+4. Перезапусти dev-сервер — включатся реальная авторизация и БД.
 
-## Learn More
+## Структура
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+См. [`CLAUDE.md`](CLAUDE.md) — палитра, структура папок, API компонентов и реестр готовых модулей.

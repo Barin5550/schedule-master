@@ -8,8 +8,16 @@ export const mockCategories: Category[] = [
   { id: "rest", name: "Отдых", color: "#64748B", icon: "coffee" },
 ];
 
+/** Локальная ISO-дата YYYY-MM-DD без сдвига по часовому поясу. */
+export function toLocalISO(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
 export function todayISO(): string {
-  return new Date().toISOString().slice(0, 10);
+  return toLocalISO(new Date());
 }
 
 export function getCategory(id?: string | null): Category | undefined {
@@ -103,7 +111,7 @@ export function getMockWeekTasks(): Task[] {
   function dateAt(offset: number): string {
     const d = new Date(monday);
     d.setDate(monday.getDate() + offset);
-    return d.toISOString().slice(0, 10);
+    return toLocalISO(d);
   }
 
   const seed: Array<Omit<Task, "id" | "date"> & { offset: number }> = [

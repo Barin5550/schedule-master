@@ -16,6 +16,33 @@ export const metadata: Metadata = {
   description:
     "Умное расписание для людей, которые серьёзно относятся к дисциплине.",
   metadataBase: new URL("https://schedulemaster.app"),
+  keywords: [
+    "расписание",
+    "тайм-менеджмент",
+    "продуктивность",
+    "дисциплина",
+    "привычки",
+    "планировщик",
+  ],
+  applicationName: "ScheduleMaster",
+  openGraph: {
+    type: "website",
+    locale: "ru_RU",
+    siteName: "ScheduleMaster",
+    title: "ScheduleMaster — Возьми под контроль своё время",
+    description:
+      "Умное расписание для людей, которые серьёзно относятся к дисциплине.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "ScheduleMaster",
+    description:
+      "Умное расписание для людей, которые серьёзно относятся к дисциплине.",
+  },
+};
+
+export const viewport = {
+  themeColor: "#0A0A0A",
 };
 
 export default function RootLayout({
