@@ -3,25 +3,91 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --brand-black: #0a0a0a;
+  --brand-card: #111111;
+  --brand-yellow: #f5c518;
+  --brand-border: #222222;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  border-color: var(--brand-border);
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--brand-black);
+  color: #ffffff;
+  font-family: var(--font-inter), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ===== Custom scrollbar (thin, yellow track) ===== */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--brand-yellow) #0a0a0a;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0a0a0a;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #3a3000;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--brand-yellow);
+}
+
+/* ===== Yellow text selection ===== */
+::selection {
+  background: var(--brand-yellow);
+  color: #0a0a0a;
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+
+  /* Faint graph-paper grid used on hero / empty backgrounds */
+  .bg-grid {
+    background-image:
+      linear-gradient(to right, #1a1a1a 1px, transparent 1px),
+      linear-gradient(to bottom, #1a1a1a 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  /* Radial mask so the grid fades toward the edges */
+  .mask-radial {
+    -webkit-mask-image: radial-gradient(ellipse at center, black 40%, transparent 75%);
+    mask-image: radial-gradient(ellipse at center, black 40%, transparent 75%);
+  }
+
+  /* Skeleton shimmer */
+  .skeleton {
+    @apply relative overflow-hidden bg-brand-border/40;
+  }
+  .skeleton::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.06),
+      transparent
+    );
+    animation: shimmer 1.5s infinite;
   }
 }
