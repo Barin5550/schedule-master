@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Search,
@@ -19,12 +19,11 @@ import Button from "@/components/ui/Button";
 import { tips, tipCategories } from "@/data/tips";
 import { cn } from "@/lib/utils";
 import type { Tip, TipCategory } from "@/types";
+import { useSavedTips } from "@/hooks/useSavedTips";
 import TipCard from "@/components/tips/TipCard";
 import TipModal from "@/components/tips/TipModal";
 import FeaturedTip from "@/components/tips/FeaturedTip";
 import TechniqueCard, { type Technique } from "@/components/tips/TechniqueCard";
-
-const STORAGE_KEY = "sm:saved-tips";
 
 type CategoryKey = TipCategory | "all";
 
@@ -74,38 +73,12 @@ const techniques: Technique[] = [
 export default function TipsPage() {
   const [query, setQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState<CategoryKey>("all");
-  const [savedIds, setSavedIds] = useState<string[]>([]);
   const [activeTip, setActiveTip] = useState<Tip | null>(null);
   const [activeTechnique, setActiveTechnique] = useState<Technique | null>(null);
-  const [hydrated, setHydrated] = useState(false);
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    try {
-      const raw = window.localStorage.getItem(STORAGE_KEY);
-      if (raw) setSavedIds(JSON.parse(raw));
-    } catch {
-      /* ignore malformed storage */
-    }
-    setHydrated(true);
-  }, []);
+  // Сохранённые советы: демо → localStorage, реальный режим → Supabase.
+  const { savedIds, toggle: toggleSave, isSaved } = useSavedTips();
 
-  useEffect(() => {
-    if (!hydrated || typeof window === "undefined") return;
-    try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(savedIds));
-    } catch {
-      /* ignore quota errors */
-    }
-  }, [savedIds, hydrated]);
-
-  function toggleSave(id: string) {
-    setSavedIds((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
-    );
-  }
-
-  const isSaved = (id: string) => savedIds.includes(id);
   const hasQuery = query.trim().length > 0;
 
   const filteredTips = useMemo(() => {

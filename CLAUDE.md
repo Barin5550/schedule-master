@@ -77,17 +77,18 @@
 
 ### Реестр данных/демо-режим
 
-- Без настоящего Supabase (`.env.local` с placeholder) приложение работает на mock-данных: `isSupabaseConfigured===false`, middleware пропускает все маршруты, страницы видны без логина.
-- Чтобы включить бэкенд: выполнить `supabase/schema.sql`, прописать `NEXT_PUBLIC_SUPABASE_URL` и `NEXT_PUBLIC_SUPABASE_ANON_KEY` в `.env.local`.
+- Без настоящего Supabase (`.env.local` с placeholder/пусто) `isSupabaseConfigured===false`: данные в `localStorage`, middleware пропускает все маршруты, страницы видны без логина. Первый запуск — чистый старт (без задач); старые демо-задачи чистит `resetIfLegacy` через `LegacyReset` в `layout.tsx`.
+- Чтобы включить бэкенд: выполнить `supabase/schema.sql`, прописать `NEXT_PUBLIC_SUPABASE_URL` и `NEXT_PUBLIC_SUPABASE_ANON_KEY` в `.env.local`. Тогда задачи и сохранённые советы пишутся в Supabase, авторизация — реальная.
 - Даты форматируются локально (`toLocalISO` в `src/lib/mock.ts`, `toISODate` в `scheduleUtils`) — НЕ через `toISOString()` (сдвиг по TZ).
 
 ### Общее хранилище задач (единый источник)
 
-- `useTasks()` (`src/hooks/useTasks.ts`) — ЕДИНЫЙ источник задач для дашборда и расписания. В демо-режиме все экземпляры делят один SWR-ключ `demo-tasks` → правки видны на всех страницах; данные пишутся в `localStorage` (`schedulemaster_tasks`). `mutate(updater)` принимает массив или `(prev)=>next`, сам сохраняет в localStorage.
+- `useTasks()` (`src/hooks/useTasks.ts`) — ЕДИНЫЙ источник задач для дашборда и расписания. Демо: все экземпляры делят SWR-ключ `demo-tasks` → правки видны везде; данные в `localStorage` (`schedulemaster_tasks`). Реальный режим: `mutate` оптимистично обновляет кэш, считает разницу (создать/обновить/удалить) и пишет её в Supabase через `src/lib/api/tasks.ts`, затем ревалидирует (подтянуть настоящие uuid). `mutate(updater)` принимает массив или `(prev)=>next` — страницы менять не нужно.
 - НЕ возвращать к локальному `useState` для задач в dashboard/schedule — это рассинхронизирует страницы.
-- Привычки сохраняются в `localStorage` (`schedulemaster_habits`) в `HabitsCard` (гидрация после монтирования, чтобы не было SSR-mismatch).
-- **«Основа» расписания**: `loadBaseSchedule`/`saveBaseSchedule`/`buildTasksFromBase` (`src/lib/mock.ts`, ключ `schedulemaster_base`). На странице расписания в `CategoryPanel` секция «Моя основа»: «Закрепить текущий день» → сохраняет задачи дня как шаблон; «Применить основу» → заполняет выбранный день этим шаблоном.
-- Демо-режим помечен баннером `DemoBanner` (`src/components/ui/DemoBanner.tsx`), вставлен в `AppShell`.
+- **Сохранённые советы**: `useSavedTips()` (`src/hooks/useSavedTips.ts`) — демо `localStorage` (`sm:saved-tips`), реальный режим — таблица `saved_tips` (api `src/lib/api/tips.ts`). Используется в `src/app/tips/page.tsx`.
+- **Привычки** (`HabitsCard`) и **настройки профиля** пока хранятся ТОЛЬКО в `localStorage` в обоих режимах (в БД ещё не подключены: у habits в схеме нет `done_today` и нет UI добавления; профиль — в основном клиентские настройки). Это осознанный TODO для облачной синхронизации этих сущностей.
+- **«Основа» расписания**: `loadBaseSchedule`/`saveBaseSchedule`/`buildTasksFromBase` (`src/lib/mock.ts`, ключ `schedulemaster_base`). В `CategoryPanel` секция «Моя основа»: «Закрепить текущий день» → шаблон; «Применить основу» → заполнить выбранный день.
+- `DemoBanner` (`src/components/ui/DemoBanner.tsx`) сейчас возвращает `null` (баннер скрыт — продукт самодостаточный).
 
 ## Правила кода
 

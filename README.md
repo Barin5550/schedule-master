@@ -24,14 +24,36 @@ npm run dev      # http://localhost:3000
 npm run build    # продакшен-сборка
 ```
 
-Приложение работает «из коробки» в **демо-режиме** на mock-данных — без настройки бэкенда видны все страницы.
+Приложение работает «из коробки» без бэкенда: данные хранятся в `localStorage`
+браузера. Подключение Supabase (ниже) включает реальную авторизацию и облачную
+синхронизацию — **без правок кода**.
 
-## Подключение Supabase (опционально)
+## Подключение Supabase
 
-1. Создай проект на [supabase.com](https://supabase.com).
+1. Создай проект на [supabase.com](https://supabase.com) → запиши **Project URL** и **anon public key** (Settings → API).
 2. Выполни SQL из [`supabase/schema.sql`](supabase/schema.sql) в SQL Editor (таблицы, RLS, триггер профиля).
 3. Скопируй `.env.local.example` → `.env.local` и подставь `NEXT_PUBLIC_SUPABASE_URL` и `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
-4. Перезапусти dev-сервер — включатся реальная авторизация и БД.
+4. Перезапусти dev-сервер. `isSupabaseConfigured` станет `true` и приложение
+   переключится на БД: регистрация/вход через Supabase Auth, задачи и
+   сохранённые советы пишутся в Postgres (RLS — каждый видит только своё).
+5. (Опц.) Для входа через Google — включи Google-провайдер в Supabase Auth и
+   добавь redirect URL твоего домена.
+
+## Деплой на Vercel
+
+1. Запушь репозиторий на GitHub:
+   ```bash
+   git remote add origin <твой-репозиторий>.git
+   git push -u origin main
+   ```
+2. На [vercel.com](https://vercel.com) → **Add New Project** → импортируй репозиторий
+   (Vercel сам определит Next.js, команда сборки `next build`).
+3. В **Environment Variables** добавь `NEXT_PUBLIC_SUPABASE_URL` и
+   `NEXT_PUBLIC_SUPABASE_ANON_KEY` (если используешь Supabase). Без них сайт
+   соберётся и будет работать на `localStorage`.
+4. **Deploy** → получишь публичный HTTPS-адрес. Для своего домена — Project → Domains.
+
+`.env.local` в гите игнорируется — ключи задаются в настройках Vercel.
 
 ## Структура
 
