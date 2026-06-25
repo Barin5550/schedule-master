@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Bell,
@@ -19,6 +19,7 @@ import { cn } from "@/lib/utils";
 import AccordionSection from "@/components/profile/AccordionSection";
 import Segmented from "@/components/profile/Segmented";
 import DangerZone from "@/components/profile/DangerZone";
+import { useProfile } from "@/hooks/useProfile";
 
 type SectionKey =
   | "personal"
@@ -76,10 +77,28 @@ export default function SettingsAccordion({
     );
   }
 
-  // Личные данные
+  // Личные данные — синхронизируются с сохранённым профилем (localStorage/Supabase)
+  const { profile, save: saveProfile } = useProfile();
   const [name, setName] = useState(initialName);
   const [goal, setGoal] = useState<Goal>("work");
   const [productive, setProductive] = useState<ProductiveTime>("morning");
+
+  useEffect(() => {
+    if (profile.displayName != null) setName(profile.displayName);
+    if (profile.goal) setGoal(profile.goal as Goal);
+    if (profile.productiveTime) {
+      setProductive(profile.productiveTime as ProductiveTime);
+    }
+  }, [profile.displayName, profile.goal, profile.productiveTime]);
+
+  async function savePersonal() {
+    await saveProfile({
+      displayName: name,
+      goal,
+      productiveTime: productive,
+    });
+    flagSaved("personal");
+  }
 
   // Расписание
   const [workFrom, setWorkFrom] = useState("09:00");
@@ -154,7 +173,7 @@ export default function SettingsAccordion({
             />
           </div>
           <div className="flex items-center gap-3">
-            <Button type="button" onClick={() => flagSaved("personal")}>
+            <Button type="button" onClick={savePersonal}>
               Сохранить
             </Button>
             <SavedHint show={savedKey === "personal"} />

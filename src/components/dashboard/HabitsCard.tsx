@@ -1,45 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Check, Flame } from "lucide-react";
 import Card from "@/components/ui/Card";
-import { mockHabits } from "@/lib/mock";
-import type { Habit } from "@/types";
+import { useHabits } from "@/hooks/useHabits";
 import { cn } from "@/lib/utils";
 
-const HABITS_KEY = "schedulemaster_habits";
-
-/** Карточка «Привычки» с сохранением состояния в localStorage. */
+/** Карточка «Привычки». Демо — localStorage, реальный режим — таблица habits. */
 export default function HabitsCard() {
-  // Старт с детерминированного набора (чтобы не было рассинхрона гидрации),
-  // затем подменяем сохранённым состоянием после монтирования.
-  const [habits, setHabits] = useState<Habit[]>(() =>
-    mockHabits.map((h) => ({ ...h })),
-  );
-
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(HABITS_KEY);
-      if (raw) setHabits(JSON.parse(raw) as Habit[]);
-    } catch {
-      // ignore — используем значения по умолчанию
-    }
-  }, []);
-
-  function toggle(id: string) {
-    setHabits((prev) => {
-      const next = prev.map((h) =>
-        h.id === id ? { ...h, doneToday: !h.doneToday } : h,
-      );
-      try {
-        localStorage.setItem(HABITS_KEY, JSON.stringify(next));
-      } catch {
-        // ignore
-      }
-      return next;
-    });
-  }
+  const { habits, toggle } = useHabits();
 
   return (
     <Card hover className="flex flex-col gap-3">
