@@ -234,17 +234,23 @@ export default function TipsPage() {
       </section>
 
       {/* COLLECTION */}
-      {savedTips.length > 0 && (
-        <section className="flex flex-col gap-5">
-          <div className="flex items-center gap-2">
-            <Bookmark className="h-5 w-5 text-brand-yellow" />
-            <h2 className="text-xl font-semibold text-brand-text">
-              Твоя коллекция
-            </h2>
+      <section className="flex flex-col gap-5">
+        <div className="flex items-center gap-2">
+          <Bookmark className="h-5 w-5 text-brand-yellow" />
+          <h2 className="text-xl font-semibold text-brand-text">
+            Твоя коллекция
+          </h2>
+          {savedTips.length > 0 && (
             <span className="text-sm text-brand-muted">
               ({savedTips.length})
             </span>
-          </div>
+          )}
+        </div>
+        {savedTips.length === 0 ? (
+          <p className="text-sm text-brand-muted">
+            Нажми на закладку 🔖 у любого совета, чтобы сохранить его сюда.
+          </p>
+        ) : (
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
             <AnimatePresence mode="popLayout">
               {savedTips.map((tip) => (
@@ -258,8 +264,8 @@ export default function TipsPage() {
               ))}
             </AnimatePresence>
           </div>
-        </section>
-      )}
+        )}
+      </section>
 
       {/* TIP MODAL */}
       <TipModal

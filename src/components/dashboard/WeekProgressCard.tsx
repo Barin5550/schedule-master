@@ -2,13 +2,19 @@
 
 import { motion } from "framer-motion";
 import Card from "@/components/ui/Card";
-import { mockWeekProgress, weekDayLabels } from "@/lib/mock";
+import { weekDayLabels } from "@/lib/mock";
 
 const TRACK_HEIGHT = 120;
 
+export interface WeekProgressCardProps {
+  /** Процент выполнения по дням недели (Пн–Вс), 7 чисел. */
+  data?: number[];
+}
+
 /** Карточка «Прогресс недели» — 7 вертикальных столбиков. */
-export default function WeekProgressCard() {
+export default function WeekProgressCard({ data }: WeekProgressCardProps) {
   const todayIndex = (new Date().getDay() + 6) % 7; // Пн = 0
+  const values = data && data.length === 7 ? data : [0, 0, 0, 0, 0, 0, 0];
 
   return (
     <Card hover className="flex flex-col gap-4">
@@ -19,7 +25,7 @@ export default function WeekProgressCard() {
         className="flex items-end justify-between gap-2"
         style={{ height: TRACK_HEIGHT }}
       >
-        {mockWeekProgress.map((pct, i) => {
+        {values.map((pct, i) => {
           const isToday = i === todayIndex;
           return (
             <div

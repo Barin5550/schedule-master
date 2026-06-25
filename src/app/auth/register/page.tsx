@@ -87,6 +87,8 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [awaitingConfirm, setAwaitingConfirm] = useState(false);
+  const [sentEmail, setSentEmail] = useState("");
 
   const [goal, setGoal] = useState<Goal>("study");
   const [dailyHours, setDailyHours] = useState(4);
@@ -138,12 +140,21 @@ export default function RegisterPage() {
       return;
     }
     try {
-      await signUp(values.email, values.password, {
-        firstName: values.firstName,
-        goal: goalLabels[goal],
-        productiveTime: timeLabels[productiveTime],
-        dailyHours,
-      });
+      const { needsConfirmation } = await signUp(
+        values.email,
+        values.password,
+        {
+          firstName: values.firstName,
+          goal: goalLabels[goal],
+          productiveTime: timeLabels[productiveTime],
+          dailyHours,
+        },
+      );
+      if (needsConfirmation) {
+        setSentEmail(values.email);
+        setAwaitingConfirm(true);
+        return;
+      }
       router.push("/dashboard");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Не удалось создать аккаунт");
@@ -164,6 +175,33 @@ export default function RegisterPage() {
       setGoogleLoading(false);
     }
   };
+
+  if (awaitingConfirm) {
+    return (
+      <AuthSplit
+        quote="Каждый день — это шанс стать на шаг ближе к себе будущему."
+        author="ScheduleMaster"
+      >
+        <div className="text-center">
+          <div className="mb-4 text-5xl">📧</div>
+          <h1 className="mb-2 text-2xl font-bold text-brand-text">
+            Проверьте почту
+          </h1>
+          <p className="text-brand-muted">
+            Мы отправили письмо на{" "}
+            <span className="text-brand-text">{sentEmail}</span>. Перейдите по
+            ссылке, чтобы активировать аккаунт и войти.
+          </p>
+          <Link
+            href="/auth/login"
+            className="mt-6 inline-block text-sm font-medium text-brand-yellow transition-colors hover:text-brand-yellow-hover"
+          >
+            Вернуться ко входу
+          </Link>
+        </div>
+      </AuthSplit>
+    );
+  }
 
   return (
     <AuthSplit

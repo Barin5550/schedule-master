@@ -38,6 +38,7 @@ export default function AddTaskModal({
   const [priority, setPriority] = useState<Priority>("medium");
   const [note, setNote] = useState("");
   const [error, setError] = useState("");
+  const [timeError, setTimeError] = useState("");
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -53,6 +54,7 @@ export default function AddTaskModal({
       setPriority("medium");
       setNote("");
       setError("");
+      setTimeError("");
       setDropdownOpen(false);
     }
   }, [open]);
@@ -75,6 +77,10 @@ export default function AddTaskModal({
   function handleSave() {
     if (!title.trim()) {
       setError("Введите название задачи");
+      return;
+    }
+    if (startTime && endTime && endTime <= startTime) {
+      setTimeError("Время конца должно быть позже начала");
       return;
     }
     const task: Task = {
@@ -129,7 +135,10 @@ export default function AddTaskModal({
             <input
               type="time"
               value={startTime}
-              onChange={(e) => setStartTime(e.target.value)}
+              onChange={(e) => {
+                setStartTime(e.target.value);
+                if (timeError) setTimeError("");
+              }}
               className={cn(inputClasses, "[color-scheme:dark]")}
             />
           </div>
@@ -140,11 +149,15 @@ export default function AddTaskModal({
             <input
               type="time"
               value={endTime}
-              onChange={(e) => setEndTime(e.target.value)}
+              onChange={(e) => {
+                setEndTime(e.target.value);
+                if (timeError) setTimeError("");
+              }}
               className={cn(inputClasses, "[color-scheme:dark]")}
             />
           </div>
         </div>
+        {timeError && <p className="-mt-2 text-sm text-red-400">{timeError}</p>}
 
         {/* Категория — кастомный дропдаун */}
         <div ref={dropdownRef} className="relative">

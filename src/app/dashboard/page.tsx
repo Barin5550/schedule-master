@@ -7,7 +7,7 @@ import ProgressBar from "@/components/ui/ProgressBar";
 import { useAuth } from "@/hooks/useAuth";
 import { useCountUp } from "@/hooks/useCountUp";
 import { useTasks } from "@/hooks/useTasks";
-import { formatRuDate, getGreeting, mockWeekProgress, todayISO } from "@/lib/mock";
+import { formatRuDate, getGreeting, todayISO, toLocalISO } from "@/lib/mock";
 import type { Task } from "@/types";
 import StatCard from "@/components/dashboard/StatCard";
 import Sparkline from "@/components/dashboard/Sparkline";
@@ -16,24 +16,79 @@ import TipOfDayCard from "@/components/dashboard/TipOfDayCard";
 import WeekProgressCard from "@/components/dashboard/WeekProgressCard";
 import HabitsCard from "@/components/dashboard/HabitsCard";
 import AddTaskModal from "@/components/dashboard/AddTaskModal";
+import OnboardingTour from "@/components/ui/OnboardingTour";
 
-const STREAK = 21;
+/** Процент выполнения за день (или null, если задач нет). */
+function pctForDay(tasks: Task[], iso: string): number | null {
+  const day = tasks.filter((t) => t.date === iso);
+  if (day.length === 0) return null;
+  return Math.round(
+    (day.filter((t) => t.isCompleted).length / day.length) * 100,
+  );
+}
+
+/** Серия дней подряд, где есть выполненная задача. Сегодня не обрывает серию. */
+function calcStreak(tasks: Task[]): number {
+  const today = new Date();
+  let streak = 0;
+  for (let i = 0; i < 365; i++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - i);
+    const dayTasks = tasks.filter((t) => t.date === toLocalISO(d));
+    const hasCompleted = dayTasks.some((t) => t.isCompleted);
+    if (dayTasks.length > 0 && hasCompleted) streak++;
+    else if (i > 0) break; // незавершённый сегодня не обрывает серию
+  }
+  return streak;
+}
+
+/** % выполнения по дням текущей недели (Пн–Вс), 7 чисел. */
+function calcWeekData(tasks: Task[]): number[] {
+  const today = new Date();
+  const offset = (today.getDay() + 6) % 7; // Пн = 0
+  const monday = new Date(today);
+  monday.setDate(today.getDate() - offset);
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    return pctForDay(tasks, toLocalISO(d)) ?? 0;
+  });
+}
+
+/** Средняя продуктивность за последние 7 дней (только дни с задачами). */
+function calcWeekAvg(tasks: Task[]): number {
+  const today = new Date();
+  const pcts: number[] = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - i);
+    const p = pctForDay(tasks, toLocalISO(d));
+    if (p !== null) pcts.push(p);
+  }
+  return pcts.length
+    ? Math.round(pcts.reduce((a, b) => a + b, 0) / pcts.length)
+    : 0;
+}
 
 export default function DashboardPage() {
   const { user } = useAuth();
   const name = (user?.user_metadata?.first_name as string | undefined) ?? "Чемпион";
 
   const { tasks, mutate } = useTasks({ date: todayISO() });
+  const { tasks: allTasks } = useTasks(); // все задачи — для streak/недели
   const [modalOpen, setModalOpen] = useState(false);
 
   const total = tasks.length;
   const completed = tasks.filter((t) => t.isCompleted).length;
   const completionPct = total > 0 ? Math.round((completed / total) * 100) : 0;
-  const weekAvg = Math.round(mockWeekProgress.reduce((a, b) => a + b, 0) / mockWeekProgress.length);
+
+  const streak = useMemo(() => calcStreak(allTasks), [allTasks]);
+  const weekData = useMemo(() => calcWeekData(allTasks), [allTasks]);
+  const weekAvg = useMemo(() => calcWeekAvg(allTasks), [allTasks]);
 
   const totalCount = Math.round(useCountUp(total));
   const completedCount = Math.round(useCountUp(completed));
-  const streakCount = Math.round(useCountUp(STREAK));
+  const streakCount = Math.round(useCountUp(streak));
   const weekAvgCount = Math.round(useCountUp(weekAvg));
 
   const greeting = useMemo(() => getGreeting(), []);
@@ -102,7 +157,7 @@ export default function DashboardPage() {
           label="Продуктивность недели"
           value={`${weekAvgCount}%`}
           icon={<TrendingUp className="h-5 w-5" />}
-          footer={<Sparkline data={mockWeekProgress} className="w-full" />}
+          footer={<Sparkline data={weekData} className="w-full" />}
         />
       </div>
 
@@ -117,7 +172,7 @@ export default function DashboardPage() {
         </div>
         <div className="flex flex-col gap-6 lg:col-span-2">
           <TipOfDayCard />
-          <WeekProgressCard />
+          <WeekProgressCard data={weekData} />
           <HabitsCard />
         </div>
       </div>
@@ -127,6 +182,8 @@ export default function DashboardPage() {
         onClose={() => setModalOpen(false)}
         onAdd={addTask}
       />
+
+      <OnboardingTour />
     </div>
   );
 }

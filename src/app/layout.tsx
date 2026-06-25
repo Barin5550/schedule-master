@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 import LegacyReset from "@/components/LegacyReset";
 
@@ -56,6 +58,8 @@ export default function RootLayout({
       <body className="bg-brand-black text-brand-text antialiased">
         <LegacyReset />
         {children}
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );

@@ -21,7 +21,7 @@ export interface UseAuthResult {
     email: string,
     password: string,
     metadata?: SignUpMetadata,
-  ) => Promise<void>;
+  ) => Promise<{ needsConfirmation: boolean }>;
   signOut: () => Promise<void>;
   signInWithGoogle: () => Promise<void>;
 }
@@ -70,7 +70,7 @@ export function useAuth(): UseAuthResult {
 
   const signUp = useCallback(
     async (email: string, password: string, metadata?: SignUpMetadata) => {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -80,9 +80,15 @@ export function useAuth(): UseAuthResult {
             productive_time: metadata?.productiveTime,
             daily_hours: metadata?.dailyHours,
           },
+          emailRedirectTo:
+            typeof window !== "undefined"
+              ? `${window.location.origin}/auth/confirm`
+              : undefined,
         },
       });
       if (error) throw error;
+      // Если сессии нет — включено подтверждение email (нужно письмо).
+      return { needsConfirmation: !data.session };
     },
     [],
   );
