@@ -19,6 +19,15 @@ export function rowToTask(row: any): Task {
   };
 }
 
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** В БД category_id — uuid с внешним ключом. Любой не-uuid (демо-id «work»,
+ * пустая строка) превращаем в null, иначе Postgres падает с ошибкой типа. */
+function toUuidOrNull(value: unknown): string | null {
+  return typeof value === "string" && UUID_RE.test(value) ? value : null;
+}
+
 export function taskToRow(task: Partial<Task>): Record<string, unknown> {
   const row: Record<string, unknown> = {};
   if (task.title !== undefined) row.title = task.title;
@@ -26,7 +35,7 @@ export function taskToRow(task: Partial<Task>): Record<string, unknown> {
   if (task.date !== undefined) row.date = task.date;
   if (task.startTime !== undefined) row.start_time = task.startTime;
   if (task.endTime !== undefined) row.end_time = task.endTime;
-  if (task.categoryId !== undefined) row.category_id = task.categoryId;
+  if (task.categoryId !== undefined) row.category_id = toUuidOrNull(task.categoryId);
   if (task.priority !== undefined) row.priority = task.priority;
   if (task.isCompleted !== undefined) row.is_completed = task.isCompleted;
   if (task.isRecurring !== undefined) row.is_recurring = task.isRecurring;

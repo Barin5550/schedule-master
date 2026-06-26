@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Modal from "@/components/ui/Modal";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
-import { mockCategories } from "@/lib/mock";
+import { useCategories } from "@/hooks/useCategories";
 import type { Priority, RecurrencePattern } from "@/types";
 import { cn } from "@/lib/utils";
 import { recurrenceLabels } from "./scheduleUtils";
@@ -60,12 +60,13 @@ export default function ScheduleTaskModal({
   defaultDate,
   defaultStart = "09:00",
 }: ScheduleTaskModalProps) {
+  const { categories } = useCategories();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [date, setDate] = useState(defaultDate);
   const [startTime, setStartTime] = useState(defaultStart);
   const [endTime, setEndTime] = useState(addHour(defaultStart));
-  const [categoryId, setCategoryId] = useState(mockCategories[0]?.id ?? "work");
+  const [categoryId, setCategoryId] = useState("");
   const [priority, setPriority] = useState<Priority>("medium");
   const [recurrenceKey, setRecurrenceKey] = useState("none");
   const [error, setError] = useState("");
@@ -78,12 +79,17 @@ export default function ScheduleTaskModal({
       setDate(defaultDate);
       setStartTime(defaultStart);
       setEndTime(addHour(defaultStart));
-      setCategoryId(mockCategories[0]?.id ?? "work");
+      setCategoryId(categories[0]?.id ?? "");
       setPriority("medium");
       setRecurrenceKey("none");
       setError("");
     }
   }, [open, defaultDate, defaultStart]);
+
+  // Реальный режим: категории грузятся асинхронно — подставляем первую.
+  useEffect(() => {
+    if (!categoryId && categories.length > 0) setCategoryId(categories[0].id);
+  }, [categories, categoryId]);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -161,7 +167,7 @@ export default function ScheduleTaskModal({
             Категория
           </span>
           <div className="flex flex-wrap gap-2">
-            {mockCategories.map((cat) => {
+            {categories.map((cat) => {
               const active = cat.id === categoryId;
               return (
                 <button

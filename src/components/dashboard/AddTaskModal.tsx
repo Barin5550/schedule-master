@@ -6,7 +6,8 @@ import { Check, ChevronDown } from "lucide-react";
 import Modal from "@/components/ui/Modal";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
-import { mockCategories, todayISO } from "@/lib/mock";
+import { todayISO } from "@/lib/mock";
+import { useCategories } from "@/hooks/useCategories";
 import type { Priority, Task } from "@/types";
 import { cn } from "@/lib/utils";
 
@@ -30,11 +31,12 @@ export default function AddTaskModal({
   onClose,
   onAdd,
 }: AddTaskModalProps) {
+  const { categories } = useCategories();
   const [title, setTitle] = useState("");
   const [date, setDate] = useState(todayISO());
   const [startTime, setStartTime] = useState("09:00");
   const [endTime, setEndTime] = useState("10:00");
-  const [categoryId, setCategoryId] = useState<string>(mockCategories[0].id);
+  const [categoryId, setCategoryId] = useState<string>("");
   const [priority, setPriority] = useState<Priority>("medium");
   const [note, setNote] = useState("");
   const [error, setError] = useState("");
@@ -50,7 +52,7 @@ export default function AddTaskModal({
       setDate(todayISO());
       setStartTime("09:00");
       setEndTime("10:00");
-      setCategoryId(mockCategories[0].id);
+      setCategoryId(categories[0]?.id ?? "");
       setPriority("medium");
       setNote("");
       setError("");
@@ -58,6 +60,11 @@ export default function AddTaskModal({
       setDropdownOpen(false);
     }
   }, [open]);
+
+  // Реальный режим: категории грузятся асинхронно — подставляем первую.
+  useEffect(() => {
+    if (!categoryId && categories.length > 0) setCategoryId(categories[0].id);
+  }, [categories, categoryId]);
 
   useEffect(() => {
     function onClick(e: MouseEvent) {
@@ -72,7 +79,7 @@ export default function AddTaskModal({
     return () => document.removeEventListener("mousedown", onClick);
   }, [dropdownOpen]);
 
-  const selectedCategory = mockCategories.find((c) => c.id === categoryId);
+  const selectedCategory = categories.find((c) => c.id === categoryId);
 
   function handleSave() {
     if (!title.trim()) {
@@ -90,7 +97,7 @@ export default function AddTaskModal({
       date,
       startTime: startTime || null,
       endTime: endTime || null,
-      categoryId,
+      categoryId: categoryId || null,
       priority,
       isCompleted: false,
       isRecurring: false,
@@ -195,7 +202,7 @@ export default function AddTaskModal({
                 transition={{ duration: 0.15 }}
                 className="absolute z-20 mt-1 w-full overflow-hidden rounded-xl border border-brand-border bg-brand-card shadow-yellow-glow"
               >
-                {mockCategories.map((cat) => (
+                {categories.map((cat) => (
                   <li key={cat.id}>
                     <button
                       type="button"
